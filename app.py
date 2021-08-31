@@ -4,6 +4,7 @@ from pathlib import Path
 import responder
 import yaml
 
+from controllers.input import is_limited, limit_characters
 from presenters import api
 from usecases.japanese.kana_phonetics import Furigana
 from usecases.english.ipa_phonetics import IPA
@@ -27,10 +28,17 @@ api = responder.API(
 
 class JapaneseAPI:
     def __init__(self) -> None:
-        self.japanese_api = api.Japanese()
+        self.furigana = Furigana()
 
-    def on_post(self, req, resp) -> None:
-        self.japanese_api.post(req, resp)
+    async def post(self, req, resp) -> None:
+        data = await req.media()
+        text = data['raw-text']
+        resp.media["date"] = datetime.today()
+        resp.media["is-limited"] = is_limited(text)
+        if is_limited(text):
+            text = limit_characters(text)
+        resp.media["text"] = text
+        resp.media["html"] = self.furigana.export_html(text)
 
 
 class EnglishAPI:
@@ -39,9 +47,13 @@ class EnglishAPI:
 
     async def on_post(self, req, resp) -> None:
         data = await req.media()
+        text = data["raw-text"]
         resp.media["date"] = datetime.today()
-        resp.media["text"] = data["raw-text"]
-        resp.media["html"] = self.ipa.export_html(data["raw-text"])
+        resp.media["is-limited"] = is_limited(text)
+        if is_limited(text):
+            text = limit_characters(text)
+        resp.media["text"] = text
+        resp.media["html"] = self.ipa.export_html(text)
 
 
 class Root:
@@ -62,22 +74,23 @@ class JapaneseWeb:
 
     async def on_post(self, req, resp) -> None:
         data = await req.media(format='form')
-        raw_text = data['raw-text'].replace("<", "&lt").replace(">", "&gt")
-        converted_text = self.furigana.export_html(raw_text)
+        text = data["raw-text"]
+        text = limit_characters(text).replace("<", "&lt").replace(">", "&gt")
+        converted_text = self.furigana.export_html(text)
 
-        @api.background.task
-        def log():
-            today = date.today()
-            exec_time = datetime.today()
-            raw = '-'.join(raw_text.splitlines())
-            converted = '-'.join(converted_text.splitlines())
-            with open(f'./logs/{today}.tsv', mode='a',
-                      encoding='utf-8') as log:
-                log.write(f"{exec_time}\t{raw}\t{converted}\n")
-
-        log()
+        # @api.background.task
+        # def log():
+        #     today = date.today()
+        #     exec_time = datetime.today()
+        #     raw = '-'.join(raw_text.splitlines())
+        #     converted = '-'.join(converted_text.splitlines())
+        #     with open(f'./logs/{today}.tsv', mode='a',
+        #               encoding='utf-8') as log:
+        #         log.write(f"{exec_time}\t{raw}\t{converted}\n")
+        #
+        # log()
         resp.content = api.template('japanese.html',
-                                    raw_text=raw_text,
+                                    raw_text=text,
                                     converted_text=converted_text)
 
 
@@ -94,22 +107,23 @@ class EnglishWeb:
 
     async def on_post(self, req, resp) -> None:
         data: object = await req.media(format='form')
-        raw_text: str = data['raw-text'].replace("<", "&lt").replace(">", "&gt")
-        converted_text = self.ipa.export_html(raw_text)
+        text: str = data["raw-text"]
+        text = limit_characters(text).replace("<", "&lt").replace(">", "&gt")
+        converted_text = self.ipa.export_html(text)
 
-        @api.background.task
-        def log():
-            today = date.today()
-            exec_time = datetime.today()
-            raw = '-'.join(raw_text.splitlines())
-            converted = '-'.join(converted_text.splitlines())
-            with open(f'./logs/{today}.tsv', mode='a',
-                      encoding='utf-8') as log:
-                log.write(f"{exec_time}\t{raw}\t{converted}\n")
-
-        log()
+        # @api.background.task
+        # def log():
+        #     today = date.today()
+        #     exec_time = datetime.today()
+        #     raw = '-'.join(raw_text.splitlines())
+        #     converted = '-'.join(converted_text.splitlines())
+        #     with open(f'./logs/{today}.tsv', mode='a',
+        #               encoding='utf-8') as log:
+        #         log.write(f"{exec_time}\t{raw}\t{converted}\n")
+        #
+        # log()
         resp.content = api.template('english.html',
-                                    raw_text=raw_text,
+                                    raw_text=text,
                                     converted_text=converted_text)
 
 
