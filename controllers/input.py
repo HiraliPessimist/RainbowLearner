@@ -1,4 +1,4 @@
-MAX_CHARACTERS = 5_000
+MAX_CHARACTERS = 1_000
 
 
 def is_limited(text: str) -> bool:

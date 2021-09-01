@@ -140,9 +140,9 @@ if __name__ == '__main__':
         SERVER = mode['SERVER']
         PORT = mode['PORT']
 
-    logs = Path('./logs')
-    if not logs.exists():
-        logs.mkdir(mode=0o644)
+    # logs = Path('./logs')
+    # if not logs.exists():
+    #     logs.mkdir(mode=0o644)
 
     print(f"Start in {ENV} mode...")
     api.run(address=SERVER, port=PORT)
