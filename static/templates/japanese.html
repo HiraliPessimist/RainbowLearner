@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="../static/css/basic.css">
 </head>
 <body>
-<h1>日本語テキストを&ltruby&gtタグ付きのHTMLに変換する</h1>
+<h1><ruby>日本語<rp>(</rp><rt>にほんご</rt><rp>)</rp></ruby>にふりがなを<ruby>付ける<rp>(</rp><rt>つ　　</rt><rp>)</rp></ruby></h1>
 <h2>Adding &ltruby&gt tags to Japanese texts.(limit 1,000 characters)</h2>
 
 <div class="pure-g">
@@ -22,7 +22,7 @@
         <form method="post" enctype="text/plain" accept-charset="UTF-8">
             <h3><label for="raw-text">入力欄 Fill texts</label></h3>
             <textarea id="raw-text" name="raw-text" rows="7" cols="40">{{ raw_text|safe }}</textarea>
-            <button class="pure-button-primary" type="submit">変換</button>
+            <button class="pure-button-primary" type="submit"><ruby>読む<rp>(</rp><rt>よ　</rt><rp>)</rp></ruby><br></button>
         </form>
         <h3>表示 Text</h3>
         <p class="display" id="output-text">{{ converted_text|safe }}</p>
