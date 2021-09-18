@@ -41,8 +41,6 @@ class JapaneseAPI:
         resp.media["text"] = text
         resp.media["html"] = phonetics
 
-        Logs.create(text, phonetics, req.client.host)
-
 
 class EnglishAPI:
     def __init__(self) -> None:
@@ -58,8 +56,6 @@ class EnglishAPI:
         phonetics = self.ipa.export_html(text)
         resp.media["text"] = text
         resp.media["html"] = phonetics
-
-        Logs.create(text, phonetics, req.client.host)
 
 
 class Root:
@@ -88,8 +84,6 @@ class JapaneseWeb:
                                     raw_text=text,
                                     converted_text=converted_text)
 
-        Logs.create(text, converted_text, req.client.host)
-
 
 class EnglishWeb:
     def __init__(self) -> None:
@@ -111,8 +105,6 @@ class EnglishWeb:
         resp.content = api.template('english.html',
                                     raw_text=text,
                                     converted_text=converted_text)
-
-        Logs.create(text, converted_text, req.client.host)
 
 
 api.add_route('/', Root)
