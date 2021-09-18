@@ -46,11 +46,11 @@ class Furigana:
     @classmethod
     def __re_compile(cls) -> None:
         """Regular expression patterns"""
-        cls.re_hiragana = re.compile("[ぁ-ん]")
-        cls.re_katakana = re.compile("[ァ-ン]")
-        cls.re_zenkigou = re.compile("︰-＠")
-        cls.re_kanji = re.compile("[一-龥]")
-        cls.re_ascii = re.compile("[!-~]")
+        cls.re_hiragana: str = re.compile("[ぁ-ん]")
+        cls.re_katakana: str = re.compile("[ァ-ン]")
+        cls.re_zenkigou: str = re.compile("︰-＠")
+        cls.re_kanji: str = re.compile("[一-龥]")
+        cls.re_ascii: str = re.compile("[!-~]")
 
     def _fetch_characters(self, sentences: list[str]) -> list[tuple[str, str]]:
         """

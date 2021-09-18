@@ -8,7 +8,7 @@ class IPA:
 
     _has_instance = None
 
-    def __new__(cls) -> None:
+    def __new__(cls):
         if not cls._has_instance:
             cls._has_instance = super(IPA, cls).__new__(cls)
             cls.__re_compile()

@@ -1,5 +1,4 @@
 from datetime import date, datetime
-from pathlib import Path
 
 import responder
 import yaml
@@ -8,6 +7,7 @@ from controllers.input import is_limited, limit_characters
 from presenters import api
 from usecases.japanese.kana_phonetics import Furigana
 from usecases.english.ipa_phonetics import IPA
+from usecases.log import Logs
 
 
 api = responder.API(
@@ -33,12 +33,15 @@ class JapaneseAPI:
     async def post(self, req, resp) -> None:
         data = await req.media()
         text = data['raw-text']
+        phonetics = self.furigana.export_html(text)
         resp.media["date"] = datetime.today()
         resp.media["is-limited"] = is_limited(text)
         if is_limited(text):
             text = limit_characters(text)
         resp.media["text"] = text
-        resp.media["html"] = self.furigana.export_html(text)
+        resp.media["html"] = phonetics
+
+        Logs.create(text, phonetics, req.client.host)
 
 
 class EnglishAPI:
@@ -52,8 +55,11 @@ class EnglishAPI:
         resp.media["is-limited"] = is_limited(text)
         if is_limited(text):
             text = limit_characters(text)
+        phonetics = self.ipa.export_html(text)
         resp.media["text"] = text
-        resp.media["html"] = self.ipa.export_html(text)
+        resp.media["html"] = phonetics
+
+        Logs.create(text, phonetics, req.client.host)
 
 
 class Root:
@@ -78,20 +84,11 @@ class JapaneseWeb:
         text = limit_characters(text).replace("<", "&lt").replace(">", "&gt")
         converted_text = self.furigana.export_html(text)
 
-        # @api.background.task
-        # def log():
-        #     today = date.today()
-        #     exec_time = datetime.today()
-        #     raw = '-'.join(raw_text.splitlines())
-        #     converted = '-'.join(converted_text.splitlines())
-        #     with open(f'./logs/{today}.tsv', mode='a',
-        #               encoding='utf-8') as log:
-        #         log.write(f"{exec_time}\t{raw}\t{converted}\n")
-        #
-        # log()
         resp.content = api.template('japanese.html',
                                     raw_text=text,
                                     converted_text=converted_text)
+
+        Logs.create(text, converted_text, req.client.host)
 
 
 class EnglishWeb:
@@ -111,20 +108,11 @@ class EnglishWeb:
         text = limit_characters(text).replace("<", "&lt").replace(">", "&gt")
         converted_text = self.ipa.export_html(text)
 
-        # @api.background.task
-        # def log():
-        #     today = date.today()
-        #     exec_time = datetime.today()
-        #     raw = '-'.join(raw_text.splitlines())
-        #     converted = '-'.join(converted_text.splitlines())
-        #     with open(f'./logs/{today}.tsv', mode='a',
-        #               encoding='utf-8') as log:
-        #         log.write(f"{exec_time}\t{raw}\t{converted}\n")
-        #
-        # log()
         resp.content = api.template('english.html',
                                     raw_text=text,
                                     converted_text=converted_text)
+
+        Logs.create(text, converted_text, req.client.host)
 
 
 api.add_route('/', Root)
@@ -139,10 +127,6 @@ if __name__ == '__main__':
         ENV = mode['ENV']
         SERVER = mode['SERVER']
         PORT = mode['PORT']
-
-    # logs = Path('./logs')
-    # if not logs.exists():
-    #     logs.mkdir(mode=0o644)
 
     print(f"Start in {ENV} mode...")
     api.run(address=SERVER, port=PORT)
